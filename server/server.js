@@ -1,9 +1,9 @@
 // server/server.js
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
 
-const authRoutes = require("./routes/auth");
-const peopleRoutes = require("./routes/server"); // راوتر الأشخاص
+import authRoutes from "./routes/auth.js";
+import peopleRoutes from "./routes/people.js"; // غيّري المسار إذا لديكم اسم مختلف
 
 const app = express();
 
@@ -15,11 +15,10 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/people", peopleRoutes);
 
-// ممكن تضيفي health check بسيط
+// Health Check
 app.get("/", (req, res) => {
   res.json({ message: "Memora API is running" });
 });
 
-// هنا لا نعمل listen
-// فقط نصدّر app ليستخدمه index.js
-module.exports = app;
+// تصدير التطبيق ليستخدمه index.js
+export default app;

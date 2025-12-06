@@ -1,98 +1,34 @@
-// routes/auth.js
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+// server/routes/auth.js
+import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-// Helper: get JWT secret safely
-const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_key_change_in_production";
-
-// REGISTER
+// مثال لتسجيل مستخدم
 router.post("/register", async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+  const { email, password } = req.body;
 
-    // 1) التحقق من البيانات
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 2) التأكد أن الإيميل غير مسجّل مسبقًا
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ message: "Email already exists" });
-    }
+  // هنا تحفظين في قاعدة البيانات
+  // Model.create({ email, password: hashedPassword });
 
-    // 3) تشفير الباسورد
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 4) إنشاء المستخدم
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-    });
-
-    // 5) إنشاء توكن
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.status(201).json({
-      message: "User registered successfully",
-      user: { id: user._id, name: user.name, email: user.email },
-      token,
-    });
-  } catch (error) {
-    console.error("Register error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
+  res.json({ message: "User registered successfully" });
 });
 
-// LOGIN
+// مثال لتسجيل دخول
 router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    // 1) التحقق من البيانات
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
-    }
+  // هنا تبحثين المستخدم من قاعدة البيانات
+  // let user = await User.findOne({ email });
 
-    // 2) إيجاد المستخدم
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+  const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
 
-    // 3) مقارنة الباسورد
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    // 4) إنشاء توكن
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.status(200).json({
-      message: "Logged in successfully",
-      user: { id: user._id, name: user.name, email: user.email },
-      token,
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
+  res.json({ token });
 });
 
-module.exports
+export default router;
