@@ -3,23 +3,20 @@ import { Card, CardBody, CardTitle, CardSubtitle } from "reactstrap";
 import { Link } from "react-router-dom";
 
 export default function PersonCard({ person }) {
-  // نتعامل مع events من الـ backend
+  
   const events = person.events || [];
 
   return (
     <Card className="rounded-4 mb-3 shadow-sm">
       <CardBody>
-        {/* اسم الشخص */}
         <CardTitle tag="h4" className="mb-1">
           {person.name}
         </CardTitle>
 
-        {/* العلاقة */}
         <CardSubtitle className="mb-3 text-muted">
           {person.relation}
         </CardSubtitle>
 
-        {/* الأحداث القادمة */}
         <p className="fw-bold mb-1">Upcoming Events:</p>
 
         {events.length === 0 ? (
@@ -35,7 +32,6 @@ export default function PersonCard({ person }) {
                   {ev.icon && <span className="me-1">{ev.icon}</span>}
                   {ev.type}
                 </span>
-                {/* لو تستعملين حقل days كنص مثل "12 Days" */}
                 <span className="text-muted small">
                   {ev.days || ev.date}
                 </span>
@@ -45,7 +41,6 @@ export default function PersonCard({ person }) {
         )}
 
         <div className="d-flex justify-content-between align-items-center">
-          {/* مهم: تحتاجين Route يناسب هذا الرابط في App.js */}
           <Link
             to={`/eventDetailsPage?personId=${person._id}`}
             className="btn btn-sm btn-primary rounded-pill"

@@ -1,18 +1,19 @@
-// models/Person.js
-const mongoose = require("mongoose");
+// server/models/Person.js
+
+import mongoose from "mongoose";
 
 const EventSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      required: true, // Birthday, Graduation, ...
+      required: true, // e.g., Birthday, Graduation, Anniversary
       trim: true,
     },
     icon: {
       type: String,
       default: "🎂",
     },
-    // نخزن التاريخ الحقيقي، ونحسب عدد الأيام المتبقية في الكود
+    // Stores the actual date
     eventDate: {
       type: Date,
       required: true,
@@ -23,7 +24,7 @@ const EventSchema = new mongoose.Schema(
       default: "",
     },
   },
-  { _id: false } // لأن الحدث جزء من الشخص، لا نحتاج _id منفصل لكل حدث إلا إذا أردتِ ذلك
+  { _id: false } // Embedded documents may not need their own _id
 );
 
 const PersonSchema = new mongoose.Schema(
@@ -36,9 +37,9 @@ const PersonSchema = new mongoose.Schema(
     relation: {
       type: String,
       required: true,
-      trim: true, // sister, friend, brother...
+      trim: true, // e.g., sister, friend, colleague
     },
-    // ربط بالشخص صاحب الحساب
+    // Link to the user who owns this data
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -52,4 +53,6 @@ const PersonSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Person", PersonSchema);
+const Person = mongoose.model("Person", PersonSchema);
+
+export default Person;

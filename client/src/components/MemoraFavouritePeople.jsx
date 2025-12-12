@@ -1,3 +1,4 @@
+import { useSelector } from "react-redux";
 
 import React, { useEffect, useState } from "react";
 import {
@@ -18,7 +19,8 @@ import {
 } from "reactstrap";
 import Navbar from "./Navbar";
 
-const API_URL = "http://localhost:5000/api/people";
+const API_URL = "http://localhost:5000/MemoraFavouritePeople";
+
 
 const memoraColors = {
   pageBg: "#B69BCF",
@@ -42,20 +44,30 @@ function MemoraFavouritePeople() {
   });
   const [editingId, setEditingId] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const authState = useSelector(state => state.auth);
+  const userId = authState.user?._id;
+  const token = authState.token;
 
   const fetchPeople = async () => {
     try {
       setLoading(true);
       setErrorMsg("");
-      const res = await fetch(API_URL);
+      const res = await fetch(API_URL, {
+        headers: {
+          'Authorization': `Bearer ${token}` // إرسال الرمز المميز
+        }
+      });
       if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("You are not authorized. Please log in.");
+        }
         throw new Error("Failed to load people");
       }
       const data = await res.json();
       setPeople(data || []);
     } catch (err) {
       console.error("Fetch error", err);
-      setErrorMsg("Could not load people. Please try again.");
+      setErrorMsg(err.message || "Could not load people. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -63,12 +75,15 @@ function MemoraFavouritePeople() {
 
   useEffect(() => {
     fetchPeople();
-  }, []);
+  }, [token]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormPerson((prev) => ({ ...prev, [name]: value }));
   };
+
+
+
 
   const handleAddOrUpdate = async () => {
     setErrorMsg("");
@@ -77,14 +92,25 @@ function MemoraFavouritePeople() {
       setErrorMsg("Please enter both name and relation.");
       return;
     }
+    if (!userId || !token) { // 💡 تحقق أيضاً من وجود الـ Token
+      setErrorMsg("You must be logged in to add people.");
+      return;
+    }
 
-    const payload = { ...formPerson, events: formPerson.events || [] };
+    const payload = { ...formPerson, user: userId, events: formPerson.events || [] };
+
+    // 💡 إنشاء الـ Headers لطلبات الـ POST/PUT/DELETE
+    const authHeaders = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`, // 👈 هذا هو الأهم
+    };
+
 
     try {
       if (editingId) {
         const res = await fetch(`${API_URL}/${editingId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders, // استخدام الـ Headers الجديدة
           body: JSON.stringify(payload),
         });
         if (!res.ok) {
@@ -97,7 +123,7 @@ function MemoraFavouritePeople() {
       } else {
         const res = await fetch(API_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders, // استخدام الـ Headers الجديدة
           body: JSON.stringify(payload),
         });
         if (!res.ok) {
@@ -120,7 +146,12 @@ function MemoraFavouritePeople() {
     if (!window.confirm("Delete this person?")) return;
     setErrorMsg("");
     try {
-      const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/${id}`, {
+        method: "DELETE"
+        , headers: {
+          "Authorization": `Bearer ${token}`,
+        }
+      });
       if (!res.ok) {
         throw new Error("Failed to delete person");
       }
@@ -228,7 +259,6 @@ function MemoraFavouritePeople() {
           </Alert>
         )}
 
-        {/* Cards Grid */}
         <Row className="g-4 mt-2">
           {people.map((person) => (
             <Col key={person._id} sm="6" md="4" lg="3">

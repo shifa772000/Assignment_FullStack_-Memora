@@ -4,7 +4,6 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_VARIABLE || "http://localhost:5000";
 
-// قراءة البيانات المحفوظة من قبل
 const savedUser = JSON.parse(localStorage.getItem("memora_user") || "null");
 const savedToken = localStorage.getItem("memora_token") || null;
 

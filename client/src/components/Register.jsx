@@ -18,7 +18,7 @@ const memoraColors = {
 };
 
 export default function Register() {
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
@@ -38,14 +38,12 @@ export default function Register() {
       return;
     }
 
-    const data = { name, email, password: pwd };
+    const data = { username, email, password: pwd };
 
     try {
       await dispatch(registerThunk(data)).unwrap();
-      // إذا نجح التسجيل نوجه المستخدم إلى صفحة تسجيل الدخول
       navigate("/login");
     } catch (error) {
-      // الرسالة التفصيلية تأتي من الـ slice في msg
       console.log("Register error:", error);
     }
   };
@@ -100,12 +98,12 @@ export default function Register() {
           </h3>
 
           <Form onSubmit={handleRegister}>
-            {/* Name */}
+            {/* username */}
             <FormGroup>
               <Input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 style={{
                   backgroundColor: memoraColors.inputBg,
@@ -116,7 +114,7 @@ export default function Register() {
                   boxShadow: "0 0 0 1px rgba(255,255,255,0.6)",
                   marginBottom: "12px",
                 }}
-                placeholder="Name"
+                placeholder="username"
               />
             </FormGroup>
 
@@ -180,7 +178,6 @@ export default function Register() {
               />
             </FormGroup>
 
-            {/* رسالة خطأ محلية لكلمات المرور */}
             {localError && (
               <p
                 className="text-center"
@@ -214,7 +211,6 @@ export default function Register() {
             </Button>
           </Form>
 
-          {/* رسالة من الـ backend عبر auth.msg */}
           {msg && (
             <p className="text-danger text-center mt-3" style={{ fontSize: 13 }}>
               {msg}
