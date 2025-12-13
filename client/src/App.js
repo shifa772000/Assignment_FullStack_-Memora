@@ -13,6 +13,7 @@ import EventForm from "./components/EventForm";
 import MemoraFavouritePeople from "./components/MemoraFavouritePeople";
 import EventDetailsPage from "./components/EventDetailsPage";
 import Contact from "./components/Contact";
+import ForgotPassword from "./components/ForgotPassword";
 //import { memoraStore } from "./store/memoraStore";
 
 function App() {
@@ -25,7 +26,7 @@ function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/people" element={<PeopleList />} />
               <Route
                 path="/MemoraFavouritePeople"
@@ -34,7 +35,6 @@ function App() {
               <Route path="/eventDetailsPage" element={<EventDetailsPage />} />
 
               <Route path="/event-details" element={<EventForm />} />
-
 
               <Route path="/contact" element={<Contact />} />
             </Routes>
