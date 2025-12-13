@@ -1,19 +1,40 @@
-
 import { Card, CardBody, CardTitle, CardSubtitle } from "reactstrap";
 import { Link } from "react-router-dom";
 
-export default function PersonCard({ person }) {
-  
+export default function PersonCard({ person, colors = {} }) {
   const events = person.events || [];
 
   return (
-    <Card className="rounded-4 mb-3 shadow-sm">
+    <Card
+      className="rounded-4 mb-3 shadow-sm"
+      style={{ backgroundColor: colors.cardBg || "#EEDFF7" }}
+    >
       <CardBody>
-        <CardTitle tag="h4" className="mb-1">
+        <div className="d-flex justify-content-center mb-3">
+          <div
+            className="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+            style={{
+              width: 64,
+              height: 64,
+              backgroundColor: "#F7F0FF",
+              border: `2px solid ${colors.primary || "#4C1B6F"}`,
+            }}
+          >
+            <i
+              className="bi bi-person-fill"
+              style={{
+                fontSize: 32,
+                color: colors.primary || "#4C1B6F",
+              }}
+            ></i>
+          </div>
+        </div>
+
+        <CardTitle tag="h5" className="text-center fw-bold mb-1">
           {person.name}
         </CardTitle>
 
-        <CardSubtitle className="mb-3 text-muted">
+        <CardSubtitle className="text-center mb-3 text-muted">
           {person.relation}
         </CardSubtitle>
 
@@ -40,10 +61,10 @@ export default function PersonCard({ person }) {
           </ul>
         )}
 
-        <div className="d-flex justify-content-between align-items-center">
+        <div className="d-flex justify-content-center">
           <Link
             to={`/eventDetailsPage?personId=${person._id}`}
-            className="btn btn-sm btn-primary rounded-pill"
+            className="btn btn-sm btn-primary rounded-pill px-4"
           >
             View Events
           </Link>

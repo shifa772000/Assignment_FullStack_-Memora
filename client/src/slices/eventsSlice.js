@@ -6,37 +6,53 @@ const API_URL = process.env.REACT_APP_VARIABLE || "http://localhost:5000";
 
 export const fetchEventsByPersonThunk = createAsyncThunk(
   "events/fetchEventsByPersonThunk",
-  async (personId, { rejectWithValue }) => {
+  async (personId, thunkAPI) => {
     try {
       const res = await axios.get(`${API_URL}/api/people/${personId}/events`);
-      // نتوقع هنا أن السيرفر يرجع مصفوفة من الأحداث
       return res.data;
+    } catch (err) {
+      console.log(err);
+      if (err.response && err.response.data?.error) {
+        return thunkAPI.rejectWithValue(err.response.data.error);
+      }
+      return thunkAPI.rejectWithValue("Failed to fetch events");
+    }
+  }
+);
+
+
+// الثنك المحدث للحذف مع استدعاء الـ API
+export const deleteEventThunk = createAsyncThunk(
+  "events/deleteEvent",
+  async ({ personId, eventId }, { rejectWithValue }) => {
+    try {
+      // 💡 خطوة API: إرسال طلب الحذف
+      const res = await axios.delete(`${API_URL}/api/people/${personId}/events/${eventId}`);
+
+      // نُعيد الـ eventId لنتعرف على العنصر الذي سنحذفه من القائمة
+      return { eventId, message: res.data?.message || "Event deleted successfully" };
     } catch (err) {
       console.log(err);
       if (err.response && err.response.data?.error) {
         return rejectWithValue(err.response.data.error);
       }
-      return rejectWithValue("Failed to fetch events");
+      return rejectWithValue("Failed to delete event");
     }
   }
 );
 
 export const saveEventThunk = createAsyncThunk(
-  "events/saveEventThunk",
-  async ({ personId, eventData }, { rejectWithValue }) => {
+  "events/save",
+  async ({ personId, eventData }, thunkAPI) => {  // <-- thunkAPI هنا
     try {
-      const res = await axios.post(
-        `${API_URL}/api/people/${personId}/events`,
-        eventData
-      );
-      // نتوقع هنا أن السيرفر يرجع { message, events }
+      const res = await axios.post(`${API_URL}/events/${personId}`, eventData);
       return res.data;
     } catch (err) {
       console.log(err);
       if (err.response && err.response.data?.error) {
-        return rejectWithValue(err.response.data.error);
+        return thunkAPI.rejectWithValue(err.response.data.error);
       }
-      return rejectWithValue("Failed to save event");
+      return thunkAPI.rejectWithValue("Failed to save event");     
     }
   }
 );
@@ -90,8 +106,33 @@ const eventsSlice = createSlice({
       state.loading = false;
       state.msg = action.payload || action.error.message;
     });
+
+
+    // DELETE
+    builder.addCase(deleteEventThunk.pending, (state) => {
+      state.loading = true;
+      state.msg = null;
+    });
+    builder.addCase(deleteEventThunk.fulfilled, (state, action) => {
+      state.loading = false;
+      const { eventId, message } = action.payload;
+      state.msg = message;
+
+      // 💡 خطوة Redux: إزالة الحدث من القائمة
+      if (state.list) {
+        state.list = state.list.filter(event => event._id !== eventId);
+      }
+      state.currentEvent = null;
+    });
+    builder.addCase(deleteEventThunk.rejected, (state, action) => {
+      state.loading = false;
+      state.msg = action.payload || action.error.message;
+    });
+
   },
+
 });
+
 
 export const { setCurrentEvent, clearEventsMessage } = eventsSlice.actions;
 export default eventsSlice.reducer;

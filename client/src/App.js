@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import * as Reactstrap from "reactstrap";
 import { Provider } from "react-redux";
 import memoraStore from "./store/memoraStore";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 import Landing from "./components/Landing";
 import Login from "./components/Login";
@@ -12,6 +13,7 @@ import EventForm from "./components/EventForm";
 import MemoraFavouritePeople from "./components/MemoraFavouritePeople";
 import EventDetailsPage from "./components/EventDetailsPage";
 import Contact from "./components/Contact";
+//import { memoraStore } from "./store/memoraStore";
 
 function App() {
   return (
@@ -30,7 +32,9 @@ function App() {
                 element={<MemoraFavouritePeople />}
               />
               <Route path="/eventDetailsPage" element={<EventDetailsPage />} />
-              <Route path="/event/:eventId" element={<EventForm />} />
+
+              <Route path="/event-details" element={<EventForm />} />
+
 
               <Route path="/contact" element={<Contact />} />
             </Routes>

@@ -1,445 +1,138 @@
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { Container, Card, CardBody, Button, Table, Spinner, Alert } from "reactstrap";
+import { fetchEventsByPersonThunk } from "../slices/eventsSlice";
+import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
-import React, { useEffect, useState, useMemo } from "react";
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  CardBody,
-  Button,
-  Form,
-  FormGroup,
-  Input,
-  Label,
-  Spinner,
-  Alert,
-} from "reactstrap";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchEventsByPersonThunk,
-  saveEventThunk,
-} from "../slices/eventsSlice";
 import { fetchPeopleThunk } from "../slices/peopleSlice";
+//import EventForm from "./EventForm";
 
 const colors = {
   pageBg: "#b896cc",
   cardBg: "#e9d7f3",
-  title: "#5a2a86",
-  textDark: "#4b275f",
-  textMuted: "#8b739a",
-  inputBg: "#f9f0ff",
+  title: "#3b1e5b",
+  textDark: "#3b1e5b",
+  textMuted: "#6e5278",
   purpleBtn: "#4b1f74",
-  cancelBtnBg: "#f5edf9",
-  cancelBorder: "#c9b2de",
-  deleteBorder: "#f3a3ac",
-  deleteText: "#e0343f",
-  giftBorder: "#1b8cff",
-  giftText: "#1b8cff",
+  tableHeader: "#4b1f74",
 };
 
-function EventDetailsPage() {
+export default function EventDetailsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  // قراءة personId و eventIndex من الـ URL
-  const searchParams = useMemo(
-    () => new URLSearchParams(location.search),
-    [location.search]
-  );
+  const searchParams = new URLSearchParams(location.search);
   const personId = searchParams.get("personId");
-  const eventIndex = searchParams.get("eventIndex");
 
-  // بيانات من Redux
+  const { list: eventsList, loading: eventsLoading } = useSelector((state) => state.events);
   const { list: peopleList } = useSelector((state) => state.people);
-  const {
-    list: eventsList,
-    loading: eventsLoading,
-    msg: eventsMsg,
-  } = useSelector((state) => state.events);
+  const currentPerson = peopleList.find((p) => p._id === personId);
 
-  // جلب الأشخاص مرة واحدة (إذا القائمة فارغة)
-  useEffect(() => {
-    if (peopleList.length === 0) {
-      dispatch(fetchPeopleThunk());
-    }
-  }, [dispatch, peopleList.length]);
 
-  // جلب أحداث الشخص
   useEffect(() => {
     if (personId) {
       dispatch(fetchEventsByPersonThunk(personId));
     }
   }, [dispatch, personId]);
 
-  // الشخص الحالي (لإظهار اسمه وعلاقته)
-  const currentPerson = useMemo(
-    () => peopleList.find((p) => p._id === personId),
-    [peopleList, personId]
-  );
-
-  // حالة النموذج
-  const [formData, setFormData] = useState({
-    eventName: "",
-    eventType: "",
-    eventDate: "",
-    location: "",
-    notes: "",
-  });
-
-  // تعبئة النموذج من حدث موجود (لو eventIndex موجود) أو تركه فارغًا لإضافة حدث جديد
   useEffect(() => {
-    if (!eventsList || eventsList.length === 0) return;
+    if (!peopleList || peopleList.length === 0) {
+      dispatch(fetchPeopleThunk());
+    }
+  }, [dispatch, peopleList]);
 
-    const idx = eventIndex ? parseInt(eventIndex, 10) : 0;
-    const ev = eventsList[idx];
-
-    if (!ev) return;
-
-    setFormData({
-      eventName: ev.type || "",
-      eventType: ev.type || "",
-      eventDate: ev.date || "",
-      location: ev.location || "",
-      notes: ev.note || "",
-    });
-  }, [eventsList, eventIndex]);
-
-  // التعامل مع تغيّر الحقول
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // حفظ الحدث (إضافة/تعديل)
-  const handleSave = () => {
-    if (!personId) return;
-
-    const eventData = {
-      type: formData.eventType || formData.eventName,
-      date: formData.eventDate,
-      location: formData.location,
-      note: formData.notes,
-      // يمكن إضافة icon أو days لاحقًا
-    };
-
-    dispatch(saveEventThunk({ personId, eventData }))
-      .unwrap()
-      .then(() => {
-        navigate("/people"); // بعد الحفظ يعود لقائمة الأشخاص
-      })
-      .catch(() => {
-        // الخطأ يتم تخزينه في eventsSlice.msg مسبقًا
-      });
-  };
-
-  const handleCancel = () => {
-    navigate(-1); // رجوع خطوة للخلف
-  };
-
-  const handleDelete = () => {
-    // يمكن لاحقًا إضافة deleteEventThunk
-    alert("Delete event is not implemented yet.");
-  };
-
+  
   return (
-    <div style={{ backgroundColor: colors.lightBg, minHeight: "100vh" }}>
-      <div
-        className="min-vh-100 d-flex justify-content-center align-items-center"
-        style={{ backgroundColor: colors.pageBg }}
-      >
-        <div>
-        <Navbar />
-        <Container>
-          <Card
-            className="mx-auto shadow-lg rounded-4"
-            style={{
-              maxWidth: "950px",
-              backgroundColor: colors.cardBg,
-              borderRadius: "40px",
-            }}
-          >
-            <CardBody className="p-5">
-              {/* Title */}
-              <h1
-                className="fw-bold text-center mb-4"
-                style={{ color: colors.title }}
+    <div style={{ backgroundColor: colors.pageBg, minHeight: "100vh" }}>
+      <Navbar />
+      <Container className="py-5">
+        {!currentPerson ? (
+          <Alert color="warning" className="text-center">
+            Person not found.
+          </Alert>
+        ) : (
+          <>
+            <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+              <div>
+                <h2 style={{ color: colors.title }}>{currentPerson.name}</h2>
+                <small style={{ color: colors.textMuted }}>
+                  {currentPerson.relation} | {eventsList.length} Events
+                </small>
+              </div>
+
+              <Button
+                style={{
+                  backgroundColor: colors.purpleBtn,
+                  border: "none",
+                  borderRadius: 30,
+                  padding: "8px 20px",
+                }}
+                onClick={() => navigate(`/event-details?personId=${personId}`)}
               >
-                {eventIndex ? "Edit Event" : "Add Event"}
-              </h1>
+                + Add New Event
+              </Button>
+            </div>
 
-              {/* Person name */}
-              {currentPerson && (
-                <div className="mb-2">
-                  <div
-                    className="fw-bold"
-                    style={{ fontSize: 26, color: colors.textDark }}
-                  >
-                    {currentPerson.name}
+            <Card
+              style={{
+                backgroundColor: colors.cardBg,
+                borderRadius: 20,
+                overflow: "hidden",
+              }}
+            >
+              <CardBody>
+                {eventsLoading ? (
+                  <div className="text-center my-3">
+                    <Spinner color="primary" />
                   </div>
-                  <div
-                    className="text-uppercase"
-                    style={{
-                      fontSize: 11,
-                      letterSpacing: 0.5,
-                      color: colors.textMuted,
-                    }}
-                  >
-                    {currentPerson.relation}
+                ) : eventsList.length === 0 ? (
+                  <div className="text-center py-4" style={{ color: colors.textMuted }}>
+                    No events found for this person.
                   </div>
-                </div>
-              )}
-
-              {/* رسائل */}
-              {eventsMsg && (
-                <Alert color="info" className="mt-3 mb-4">
-                  {eventsMsg}
-                </Alert>
-              )}
-
-              {eventsLoading && (
-                <div className="text-center my-3">
-                  <Spinner color="primary" />
-                </div>
-              )}
-
-              <Form>
-                {/* Row 1: Event Name / Date */}
-                <Row className="mt-4 g-4">
-                  <Col md="6">
-                    <FormGroup>
-                      <Label
-                        className="fw-semibold mb-1"
-                        style={{ color: colors.textDark }}
-                      >
-                        Event Name
-                      </Label>
-                      <Input
-                        name="eventName"
-                        placeholder="Birthday"
-                        value={formData.eventName}
-                        onChange={handleChange}
-                        style={{
-                          backgroundColor: colors.inputBg,
-                          borderRadius: 9999,
-                          border: "none",
-                          padding: "14px 20px",
-                          color: colors.textDark,
-                        }}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md="6">
-                    <FormGroup>
-                      <Label
-                        className="fw-semibold mb-1"
-                        style={{ color: colors.textDark }}
-                      >
-                        Date
-                      </Label>
-                      <Input
-                        type="date"
-                        name="eventDate"
-                        value={formData.eventDate}
-                        onChange={handleChange}
-                        style={{
-                          backgroundColor: colors.inputBg,
-                          borderRadius: 9999,
-                          border: "none",
-                          padding: "14px 20px",
-                          color: colors.textDark,
-                        }}
-                      />
-                    </FormGroup>
-                  </Col>
-                </Row>
-
-                {/* Row 2: Event Type / Location */}
-                <Row className="mt-3 g-4">
-                  <Col md="6">
-                    <FormGroup>
-                      <Label
-                        className="fw-semibold mb-1"
-                        style={{ color: colors.textDark }}
-                      >
-                        Event Type
-                      </Label>
-                      <Input
-                        name="eventType"
-                        placeholder="Birthday"
-                        value={formData.eventType}
-                        onChange={handleChange}
-                        style={{
-                          backgroundColor: colors.inputBg,
-                          borderRadius: 9999,
-                          border: "none",
-                          padding: "14px 20px",
-                          color: colors.textDark,
-                        }}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md="6">
-                    <FormGroup>
-                      <Label
-                        className="fw-semibold mb-1"
-                        style={{ color: colors.textDark }}
-                      >
-                        Location
-                      </Label>
-                      <Input
-                        name="location"
-                        placeholder="Home, Restaurant..."
-                        value={formData.location}
-                        onChange={handleChange}
-                        style={{
-                          backgroundColor: colors.inputBg,
-                          borderRadius: 9999,
-                          border: "none",
-                          padding: "14px 20px",
-                          color: colors.textDark,
-                        }}
-                      />
-                    </FormGroup>
-                  </Col>
-                </Row>
-
-                {/* Divider */}
-                <hr
-                  className="my-4"
-                  style={{
-                    borderTop: "1px solid rgba(158, 132, 190, 0.6)",
-                  }}
-                />
-
-                {/* Notes + Gift button */}
-                <Row className="g-4">
-                  <Col md="7">
-                    <FormGroup>
-                      <Label
-                        className="fw-semibold mb-1"
-                        style={{ color: colors.textDark }}
-                      >
-                        Notes / Details
-                      </Label>
-                      <Input
-                        type="textarea"
-                        name="notes"
-                        placeholder="She likes flowers and books .."
-                        value={formData.notes}
-                        onChange={handleChange}
-                        style={{
-                          backgroundColor: colors.inputBg,
-                          borderRadius: 26,
-                          border: "none",
-                          padding: "16px 20px",
-                          minHeight: 120,
-                          color: colors.textDark,
-                          resize: "none",
-                        }}
-                      />
-                    </FormGroup>
-                  </Col>
-
-                  <Col
-                    md="5"
-                    className="d-flex justify-content-center align-items-start"
-                  >
-                    <Button
-                      type="button"
-                      className="d-inline-flex align-items-center gap-2 rounded-pill"
-                      style={{
-                        borderWidth: 2,
-                        borderStyle: "solid",
-                        borderColor: colors.giftBorder,
-                        backgroundColor: "#fff",
-                        color: colors.giftText,
-                        padding: "10px 24px",
-                        fontWeight: 600,
-                        fontSize: 15,
-                      }}
-                      onClick={() =>
-                        alert("Gift suggestions integration will go here.")
-                      }
-                    >
-                      <span
-                        className="d-flex align-items-center justify-content-center rounded-circle"
-                        style={{
-                          width: 26,
-                          height: 26,
-                          borderWidth: 2,
-                          borderStyle: "solid",
-                          borderColor: colors.giftBorder,
-                          fontSize: 16,
-                        }}
-                      >
-                        🎁
-                      </span>
-                      <span>View Gift Suggestions</span>
-                    </Button>
-                  </Col>
-                </Row>
-
-                {/* Action buttons */}
-                <div className="d-flex justify-content-end gap-2 mt-4">
-                  <Button
-                    type="button"
-                    className="rounded-3"
-                    style={{
-                      minWidth: 110,
-                      backgroundColor: "#ffe7ea",
-                      borderColor: colors.deleteBorder,
-                      color: colors.deleteText,
-                      fontWeight: 600,
-                    }}
-                    onClick={handleDelete}
-                  >
-                    Delete
-                  </Button>
-
-                  <Button
-                    type="button"
-                    className="rounded-3"
-                    style={{
-                      minWidth: 110,
-                      backgroundColor: colors.cancelBtnBg,
-                      borderColor: colors.cancelBorder,
-                      color: colors.textDark,
-                      fontWeight: 600,
-                    }}
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </Button>
-
-                  <Button
-                    type="button"
-                    className="rounded-3"
-                    style={{
-                      minWidth: 110,
-                      backgroundColor: colors.purpleBtn,
-                      borderColor: colors.purpleBtn,
-                      color: "#fff",
-                      fontWeight: 600,
-                    }}
-                    onClick={handleSave}
-                    disabled={eventsLoading}
-                  >
-                    Save
-                  </Button>
-                </div>
-              </Form>
-            </CardBody>
-          </Card>
-        </Container>
-        </div>
-      </div>
+                ) : (
+                  <Table borderless responsive className="mb-0">
+                    <thead>
+                      <tr style={{ color: colors.tableHeader }}>
+                        <th>Event Name</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {eventsList.map((event, idx) => (
+                        <tr key={idx} style={{ color: colors.textDark }}>
+                          <td>{event.eventName || event.type}</td>
+                          <td>{event.type}</td>
+                          <td>{event.date}</td>
+                          <td>{event.status || "Pending"}</td>
+                          <td>
+                            <Button
+                              color="link"
+                              onClick={() => alert("Edit not implemented yet")}
+                              style={{ padding: "0 5px", color: colors.title }}
+                            >
+                              ✏️
+                            </Button>
+                            <Button
+                              color="link"
+                              onClick={() => alert("Delete not implemented yet")}
+                              style={{ padding: "0 5px", color: "#e0343f" }}
+                            >
+                              🗑️
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                )}
+              </CardBody>
+            </Card>
+          </>
+        )}
+      </Container>
     </div>
   );
 }
-
-export default EventDetailsPage;

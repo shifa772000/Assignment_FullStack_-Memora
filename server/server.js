@@ -27,6 +27,7 @@ app.use('/api/auth', userRoutes)
 app.use('/api/persons', personRoutes);
 app.use('/api/people', personRoutes);
 
+
 mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log('The MongoDB database connection was successfully established!');

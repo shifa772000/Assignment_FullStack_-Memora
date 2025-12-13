@@ -8,6 +8,7 @@ const memoraStore = configureStore({
     auth: authReducer,
     people: peopleReducer,
     events: eventsReducer,
+    
   },
 });
 
